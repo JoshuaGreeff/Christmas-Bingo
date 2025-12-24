@@ -11,49 +11,42 @@ import { CommonModule } from '@angular/common';
 export class ChristmasBingoComponent implements OnInit {
 
   readonly STORAGE_KEY = 'christmas-bingo-card';
+  readonly SELECTED_KEY = this.STORAGE_KEY + '-selected';
+  readonly TIMESTAMP_KEY = this.STORAGE_KEY + '-timestamp';
+  readonly EXPIRY_HOURS = 8;
 
-  bingoWords: string[] = [
-    'Ugly Sweater',
-    'Hot Cocoa',
-    'Candy Canes',
-    'Christmas Lights',
-    'Silent Night',
-    'Wrapping Paper',
-    'Snowman',
-    'Jingle Bells',
-    'Reindeer',
-    'Santa Laugh',
-    'Stockings',
-    'Christmas Tree',
-    'Holiday Music',
-    'Eggnog',
-    'Mistletoe',
-    'Gingerbread',
-    'Fireplace',
-    'Family Photo',
-    'Snowflakes',
-    'Holiday Movie',
-    'Caroling',
-    'Ornaments',
-    'Winter Scarf',
-    'Christmas Cookies',
-    'North Pole'
-  ];
+  bingoNumbers: number[] = Array.from({ length: 75 }, (_, i) => i + 1);
 
-  card: string[][] = [];
+  card: any[][] = [];
   selectedCells: boolean[][] = [];
+  isPrintMode: boolean = false;
+  private noSave: boolean = false;
 
   ngOnInit(): void {
-    const savedCard = localStorage.getItem(this.STORAGE_KEY);
-    const savedSelected = localStorage.getItem(this.STORAGE_KEY + '-selected');
+    // Check for ?clear=true
+    const params = new URLSearchParams(window.location.search);
+    this.noSave = params.get('clear') === 'true';
+    this.isPrintMode = params.get('print') === 'true';
 
-    if (savedCard) {
-      this.card = JSON.parse(savedCard);
+    const savedCard = this.noSave ? null : localStorage.getItem(this.STORAGE_KEY);
+    const savedSelected = this.noSave ? null : localStorage.getItem(this.SELECTED_KEY);
+    const savedTimestamp = this.noSave ? null : localStorage.getItem(this.TIMESTAMP_KEY);
+
+    const now = Date.now();
+
+    if (savedCard && savedTimestamp) {
+      const ageMs = now - parseInt(savedTimestamp, 10);
+      const expiryMs = this.EXPIRY_HOURS * 60 * 60 * 1000;
+
+      if (ageMs > expiryMs) {
+        this.generateCard();
+      } else {
+        this.card = JSON.parse(savedCard);
+      }
     } else {
       this.generateCard();
     }
 
-    // Initialize selectedCells from localStorage or as all false
     if (savedSelected) {
       this.selectedCells = JSON.parse(savedSelected);
     } else {
@@ -63,13 +56,13 @@ export class ChristmasBingoComponent implements OnInit {
 
   toggleCell(rowIndex: number, colIndex: number) {
     this.selectedCells[rowIndex][colIndex] = !this.selectedCells[rowIndex][colIndex];
-
-    // Save updated selected state to localStorage
-    localStorage.setItem(this.STORAGE_KEY + '-selected', JSON.stringify(this.selectedCells));
+    if (!this.noSave) {
+      localStorage.setItem(this.SELECTED_KEY, JSON.stringify(this.selectedCells));
+    }
   }
 
   generateCard(): void {
-    const shuffled = [...this.bingoWords]
+    const shuffled = [...this.bingoNumbers]
       .sort(() => Math.random() - 0.5)
       .slice(0, 25);
 
@@ -78,11 +71,20 @@ export class ChristmasBingoComponent implements OnInit {
       this.card.push(shuffled.splice(0, 5));
     }
 
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.card));
+    // Set the center cell to "FREE"
+    const middle = Math.floor(this.card.length / 2);
+    this.card[middle][middle] = 'FREE';
 
-    // Reset selected cells when a new card is generated
-    this.selectedCells = this.card.map(row => row.map(_ => false));
-    localStorage.setItem(this.STORAGE_KEY + '-selected', JSON.stringify(this.selectedCells));
+    // Initialize selectedCells, optionally mark free space as selected
+    this.selectedCells = this.card.map((row, rowIndex) =>
+      row.map((cell, colIndex) => (rowIndex === middle && colIndex === middle ? true : false))
+    );
+
+    if (!this.noSave) {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.card));
+      localStorage.setItem(this.TIMESTAMP_KEY, Date.now().toString());
+      localStorage.setItem(this.SELECTED_KEY, JSON.stringify(this.selectedCells));
+    }
   }
 
 }
