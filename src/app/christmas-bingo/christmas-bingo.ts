@@ -20,17 +20,17 @@ export class ChristmasBingoComponent implements OnInit {
   card: any[][] = [];
   selectedCells: boolean[][] = [];
   isPrintMode: boolean = false;
-  private noSave: boolean = false;
+  private Save: boolean = false;
 
   ngOnInit(): void {
     // Check for ?clear=true
     const params = new URLSearchParams(window.location.search);
-    this.noSave = params.get('clear') === 'true';
+    this.Save = params.get('noclear') === 'true';
     this.isPrintMode = params.get('print') === 'true';
 
-    const savedCard = this.noSave ? null : localStorage.getItem(this.STORAGE_KEY);
-    const savedSelected = this.noSave ? null : localStorage.getItem(this.SELECTED_KEY);
-    const savedTimestamp = this.noSave ? null : localStorage.getItem(this.TIMESTAMP_KEY);
+    const savedCard = this.Save ? null : localStorage.getItem(this.STORAGE_KEY);
+    const savedSelected = this.Save ? null : localStorage.getItem(this.SELECTED_KEY);
+    const savedTimestamp = this.Save ? null : localStorage.getItem(this.TIMESTAMP_KEY);
 
     const now = Date.now();
 
@@ -56,7 +56,7 @@ export class ChristmasBingoComponent implements OnInit {
 
   toggleCell(rowIndex: number, colIndex: number) {
     this.selectedCells[rowIndex][colIndex] = !this.selectedCells[rowIndex][colIndex];
-    if (!this.noSave) {
+    if (!this.Save) {
       localStorage.setItem(this.SELECTED_KEY, JSON.stringify(this.selectedCells));
     }
   }
@@ -80,7 +80,7 @@ export class ChristmasBingoComponent implements OnInit {
       row.map((cell, colIndex) => (rowIndex === middle && colIndex === middle ? true : false))
     );
 
-    if (!this.noSave) {
+    if (!this.Save) {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.card));
       localStorage.setItem(this.TIMESTAMP_KEY, Date.now().toString());
       localStorage.setItem(this.SELECTED_KEY, JSON.stringify(this.selectedCells));
