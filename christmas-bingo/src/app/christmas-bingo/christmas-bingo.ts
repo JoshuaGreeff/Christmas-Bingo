@@ -41,14 +41,31 @@ export class ChristmasBingoComponent implements OnInit {
   ];
 
   card: string[][] = [];
+  selectedCells: boolean[][] = [];
 
   ngOnInit(): void {
-    const saved = localStorage.getItem(this.STORAGE_KEY);
-    if (saved) {
-      this.card = JSON.parse(saved);
+    const savedCard = localStorage.getItem(this.STORAGE_KEY);
+    const savedSelected = localStorage.getItem(this.STORAGE_KEY + '-selected');
+
+    if (savedCard) {
+      this.card = JSON.parse(savedCard);
     } else {
       this.generateCard();
     }
+
+    // Initialize selectedCells from localStorage or as all false
+    if (savedSelected) {
+      this.selectedCells = JSON.parse(savedSelected);
+    } else {
+      this.selectedCells = this.card.map(row => row.map(_ => false));
+    }
+  }
+
+  toggleCell(rowIndex: number, colIndex: number) {
+    this.selectedCells[rowIndex][colIndex] = !this.selectedCells[rowIndex][colIndex];
+
+    // Save updated selected state to localStorage
+    localStorage.setItem(this.STORAGE_KEY + '-selected', JSON.stringify(this.selectedCells));
   }
 
   generateCard(): void {
@@ -62,5 +79,10 @@ export class ChristmasBingoComponent implements OnInit {
     }
 
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.card));
+
+    // Reset selected cells when a new card is generated
+    this.selectedCells = this.card.map(row => row.map(_ => false));
+    localStorage.setItem(this.STORAGE_KEY + '-selected', JSON.stringify(this.selectedCells));
   }
+
 }

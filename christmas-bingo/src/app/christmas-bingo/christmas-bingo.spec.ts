@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ChristmasBingoComponent } from './christmas-bingo';
 
-import { ChristmasBingo } from './christmas-bingo';
-
-describe('ChristmasBingo', () => {
-  let component: ChristmasBingo;
-  let fixture: ComponentFixture<ChristmasBingo>;
+describe('ChristmasBingoComponent', () => {
+  let component: ChristmasBingoComponent;
+  let fixture: ComponentFixture<ChristmasBingoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ChristmasBingo]
+      imports: [ChristmasBingoComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ChristmasBingo);
+    fixture = TestBed.createComponent(ChristmasBingoComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
@@ -21,3 +20,4 @@ describe('ChristmasBingo', () => {
     expect(component).toBeTruthy();
   });
 });
+
